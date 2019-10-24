@@ -1,4 +1,4 @@
-# Random SongTournament Assitant
+# Random Song Tournament Assitant
 
 This project is a continuation of the BeatSaverMapAnalyzer project (https://github.com/ZelonGames/BeatsaverMapAnalyzer)
 
