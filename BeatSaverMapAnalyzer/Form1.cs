@@ -202,8 +202,55 @@ namespace RandomSongTournamentAssistant
             }
         }
 
+        private async Task GetRatingMaps(double minRating)
+        {
+            int currentPage = 1000;
+            int jumpDistance = currentPage;
+            int maxPage = currentPage;
+            int minPage = 0;
+
+            var ratingString = await client.GetStringAsync("https://beatsaver.com/api/maps/rating/" + currentPage);
+            using (var wr = new StreamWriter("ratingData.json"))
+            {
+                wr.WriteLine(ratingString);
+            }
+
+            var ratingMaps = JsonConvert.DeserializeObject<Latest>(ratingString);
+
+            while (true)
+            {
+                ratingString = await client.GetStringAsync("https://beatsaver.com/api/maps/rating/" + currentPage);
+                ratingMaps = JsonConvert.DeserializeObject<Latest>(ratingString);
+
+                if (ratingMaps.docs.Count > 0)
+                {
+                    if (maxPage == currentPage)
+                    {
+                        currentPage *= 2;
+                    }
+                    else
+                    {
+                        currentPage = (minPage + maxPage) / 2;
+                        minPage = currentPage;
+                    }
+                }
+                else
+                {
+                    maxPage = currentPage;
+                    currentPage /= 2;
+                    if (currentPage < minPage)
+                        currentPage = minPage;
+
+
+                    minPage = currentPage;
+                }
+            }
+        }
+
         private async void btnRandomKey_Click(object sender, EventArgs e)
         {
+            //await GetRatingMaps(80);
+
             txtMapID.Text = "";
             lblDifficulties.Text = "";
 

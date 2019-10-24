@@ -51,9 +51,9 @@
             this.btnRandomDiff = new System.Windows.Forms.Button();
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.btnFilter = new System.Windows.Forms.Button();
-            this.cmbCharacteristics = new RandomSongTournamentAssistant.CustomComboBox();
             this.cmbDifficulty = new RandomSongTournamentAssistant.CustomComboBox();
             this.customComboBox1 = new RandomSongTournamentAssistant.CustomComboBox();
+            this.cmbCharacteristics = new RandomSongTournamentAssistant.CustomComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
@@ -364,20 +364,6 @@
             this.btnFilter.UseVisualStyleBackColor = false;
             this.btnFilter.Click += new System.EventHandler(this.btnFilter_Click);
             // 
-            // cmbCharacteristics
-            // 
-            this.cmbCharacteristics.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
-            this.cmbCharacteristics.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
-            this.cmbCharacteristics.ItemHeight = 20;
-            this.cmbCharacteristics.Items.Add("Standard");
-            this.cmbCharacteristics.Items.Add("No Arrows");
-            this.cmbCharacteristics.Items.Add("Single Saber");
-            this.cmbCharacteristics.Location = new System.Drawing.Point(12, 334);
-            this.cmbCharacteristics.MarginBottom = 10;
-            this.cmbCharacteristics.Name = "cmbCharacteristics";
-            this.cmbCharacteristics.Size = new System.Drawing.Size(616, 46);
-            this.cmbCharacteristics.TabIndex = 31;
-            // 
             // cmbDifficulty
             // 
             this.cmbDifficulty.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
@@ -405,6 +391,20 @@
             this.customComboBox1.Size = new System.Drawing.Size(365, 46);
             this.customComboBox1.TabIndex = 30;
             // 
+            // cmbCharacteristics
+            // 
+            this.cmbCharacteristics.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
+            this.cmbCharacteristics.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
+            this.cmbCharacteristics.ItemHeight = 20;
+            this.cmbCharacteristics.Items.Add("Standard");
+            this.cmbCharacteristics.Items.Add("Single Saber");
+            this.cmbCharacteristics.Items.Add("No Arrows");
+            this.cmbCharacteristics.Location = new System.Drawing.Point(15, 334);
+            this.cmbCharacteristics.MarginBottom = 10;
+            this.cmbCharacteristics.Name = "cmbCharacteristics";
+            this.cmbCharacteristics.Size = new System.Drawing.Size(607, 46);
+            this.cmbCharacteristics.TabIndex = 36;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -412,10 +412,10 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(637, 610);
+            this.Controls.Add(this.cmbCharacteristics);
             this.Controls.Add(this.btnFilter);
             this.Controls.Add(this.lblClose);
             this.Controls.Add(this.lblVersion);
-            this.Controls.Add(this.cmbCharacteristics);
             this.Controls.Add(this.cmbDifficulty);
             this.Controls.Add(this.btnRandomDiff);
             this.Controls.Add(this.label6);
@@ -473,13 +473,13 @@
         private System.Windows.Forms.Label lblClose;
         private RandomSongTournamentAssistant.CustomComboBox customComboBox1;
         public RandomSongTournamentAssistant.CustomComboBox cmbDifficulty;
-        private RandomSongTournamentAssistant.CustomComboBox cmbCharacteristics;
         private System.Windows.Forms.Label lblVersion;
         private System.Windows.Forms.Button btnInstallMap;
         private System.Windows.Forms.Button btnAnalyzeMap;
         private System.Windows.Forms.Button btnRandomDiff;
         private System.Windows.Forms.PictureBox pictureBox4;
         private System.Windows.Forms.Button btnFilter;
+        public CustomComboBox cmbCharacteristics;
     }
 }
 

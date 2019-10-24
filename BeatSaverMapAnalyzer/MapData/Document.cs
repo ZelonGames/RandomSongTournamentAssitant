@@ -9,10 +9,12 @@ namespace RandomSongTournamentAssistant
     public class Document
     {
         public string key;
+        public Stats stats = null;
 
-        public Document(string key)
+        public Document(string key, Stats stats)
         {
             this.key = key;
+            this.stats = stats;
         }
     }
 }
