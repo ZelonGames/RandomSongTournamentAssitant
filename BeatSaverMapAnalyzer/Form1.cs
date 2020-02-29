@@ -17,6 +17,8 @@ using BeastSaberMapLoader;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
+using RandomSongTournamentAssistant.UserControls.Filter;
+
 namespace RandomSongTournamentAssistant
 {
     public partial class Form1 : Form
@@ -37,6 +39,12 @@ namespace RandomSongTournamentAssistant
         private int customMessageBoxWidthSize = 300;
 
         private bool testJsonMode = false;
+
+        #endregion
+
+        #region Properties
+
+        public int FilterPageNumber { get; private set; }
 
         #endregion
 
@@ -87,6 +95,7 @@ namespace RandomSongTournamentAssistant
                     txtBeatsaverFolder.Text = fbd.SelectedPath;
                 }
             }
+
         }
 
         #region Button Click Events 
@@ -202,55 +211,8 @@ namespace RandomSongTournamentAssistant
             }
         }
 
-        private async Task GetRatingMaps(double minRating)
-        {
-            int currentPage = 1000;
-            int jumpDistance = currentPage;
-            int maxPage = currentPage;
-            int minPage = 0;
-
-            var ratingString = await client.GetStringAsync("https://beatsaver.com/api/maps/rating/" + currentPage);
-            using (var wr = new StreamWriter("ratingData.json"))
-            {
-                wr.WriteLine(ratingString);
-            }
-
-            var ratingMaps = JsonConvert.DeserializeObject<Latest>(ratingString);
-
-            while (true)
-            {
-                ratingString = await client.GetStringAsync("https://beatsaver.com/api/maps/rating/" + currentPage);
-                ratingMaps = JsonConvert.DeserializeObject<Latest>(ratingString);
-
-                if (ratingMaps.docs.Count > 0)
-                {
-                    if (maxPage == currentPage)
-                    {
-                        currentPage *= 2;
-                    }
-                    else
-                    {
-                        currentPage = (minPage + maxPage) / 2;
-                        minPage = currentPage;
-                    }
-                }
-                else
-                {
-                    maxPage = currentPage;
-                    currentPage /= 2;
-                    if (currentPage < minPage)
-                        currentPage = minPage;
-
-
-                    minPage = currentPage;
-                }
-            }
-        }
-
         private async void btnRandomKey_Click(object sender, EventArgs e)
         {
-            //await GetRatingMaps(80);
-
             txtMapID.Text = "";
             lblDifficulties.Text = "";
 
@@ -263,6 +225,10 @@ namespace RandomSongTournamentAssistant
             if (maxTries > 10)
                 SwitchToLoadingScreen("Searching for a map...");
 
+            mapData = null;
+
+            string randomKey = null;
+
             var responseString = await client.GetStringAsync("https://beatsaver.com/api/maps/latest/0");
 
             var latestMaps = JsonConvert.DeserializeObject<Latest>(responseString);
@@ -270,20 +236,34 @@ namespace RandomSongTournamentAssistant
 
             int keyAsDecimal = int.Parse(latestKey, System.Globalization.NumberStyles.HexNumber);
 
-            mapData = null;
-            while (true)
+            if (randomKey == null)
             {
-                int randomNumber = rnd.Next(0, keyAsDecimal + 1);
-                string randomKey = randomNumber.ToString("x");
+                if (randomKeyFilter != null && randomKeyFilter.Rating.HasValue)
+                    await FilterHelper.SetFilterPageNumbers(client, (int)(randomKeyFilter.Rating.Value * 100), "minRatingAPIPage");
 
-                await UpdateMapData(randomKey);
-                if (mapData != null)
-                    break;
+                while (true)
+                {
+                    if (randomKeyFilter != null && randomKeyFilter.Rating.HasValue)
+                    {
+                        await FilterHelper.SetRandomKey(client, rnd);
+                        randomKey = FilterHelper.RandomKey;
+                    }
+                    else
+                    {
+                        int randomNumber = rnd.Next(0, keyAsDecimal + 1);
+                        randomKey = randomNumber.ToString("x");
+                    }
 
-                if (tries == maxTries)
-                    break;
+                    if (mapData == null)
+                        await UpdateMapData(randomKey);
+                    if (mapData != null)
+                        break;
 
-                tries++;
+                    if (tries == maxTries)
+                        break;
+
+                    tries++;
+                }
             }
 
             if (maxTries > 10)
@@ -385,7 +365,7 @@ namespace RandomSongTournamentAssistant
             HideLoadingScreen();
         }
 
-        private void btnInstallMap_Click(object sender, EventArgs e)
+        private async void btnInstallMap_Click(object sender, EventArgs e)
         {
 
             if (!CanDownloadMap(txtMapID.Text, txtBeatsaverFolder.Text))
@@ -398,7 +378,7 @@ namespace RandomSongTournamentAssistant
                 SwitchToLoadingScreen("Installing map...");
             }
 
-            Thread downloadMapThread = new Thread(() =>
+            await Task.Run(() =>
             {
                 DownloadMap(txtMapID.Text, txtBeatsaverFolder.Text);
 
@@ -413,11 +393,22 @@ namespace RandomSongTournamentAssistant
                     wr.WriteLine(txtBeatsaverFolder.Text);
                 }
             });
-            downloadMapThread.Start();
-            downloadMapThread.Join();
+
 
             HideLoadingScreen();
             //DownloadMap(txtMapID.Text, txtBeatsaverFolder.Text);
+        }
+
+        private void btnOpenCustomLevelsFolder_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.Start(txtBeatsaverFolder.Text);
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show(this, "The folder doesn't exist!", new Size(customMessageBoxWidthSize, 100));
+            }
         }
 
         #region Close Button Events
@@ -574,6 +565,7 @@ namespace RandomSongTournamentAssistant
 
             MapInfo mapInfo = null;
             string difficultyFileName = null;
+            bool requires_mapping_extensions = false;
 
             try
             {
@@ -589,6 +581,8 @@ namespace RandomSongTournamentAssistant
                         if (difficulty._difficulty.ToLower() == cmbDifficulty.SelectedItemText.ToLower())
                         {
                             difficultyFileName = difficulty._beatmapFilename;
+                            if (difficulty.customData._requirements.Any(x => x == "Mapping Extensions"))
+                                requires_mapping_extensions = true;
                             break;
                         }
                     }
@@ -624,6 +618,9 @@ namespace RandomSongTournamentAssistant
             string resultTest = wideWalls + ", three wide walls";
             if (wideWalls == 0)
                 resultTest = "No three wide walls in this map :)";
+
+            if (requires_mapping_extensions)
+                resultTest += "\nWARNING: This map does require mapping extensions!";
             CustomMessageBox.Show(this, resultTest, new Size(customMessageBoxWidthSize, 100));
 
             if (!testJsonMode)
@@ -852,6 +849,5 @@ namespace RandomSongTournamentAssistant
         }
 
         #endregion
-
     }
 }

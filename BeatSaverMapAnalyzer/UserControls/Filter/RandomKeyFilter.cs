@@ -12,10 +12,10 @@ namespace RandomSongTournamentAssistant
 {
     public partial class RandomKeyFilter : UserControl, PageControl
     {
-        private int? NPS = null;
-        private double? rating = null;
+        public int? NPS { get; private set; }
+        public double? Rating { get; private set; }
 
-        public bool UsingFilters => NPS != null || rating != null;
+        public bool UsingFilters => NPS != null || Rating != null;
 
         public RandomKeyFilter()
         {
@@ -37,9 +37,9 @@ namespace RandomSongTournamentAssistant
                 NPS = null;
 
             if (cmbRatingFilter.SelectedItemText != "None")
-                rating = Convert.ToDouble(cmbRatingFilter.SelectedItemText.Replace(">=", "").Replace(" ", "").Replace("%", "")) * 0.01;
+                Rating = Convert.ToDouble(cmbRatingFilter.SelectedItemText.Replace(">=", "").Replace(" ", "").Replace("%", "")) * 0.01;
             else
-                rating = null;
+                Rating = null;
 
             Visible = false;
 
@@ -49,7 +49,7 @@ namespace RandomSongTournamentAssistant
         public bool MatchingFilters(Difficulty difficulty, MapData mapData)
         {
             bool npsCondition = NPS.HasValue ? MapTools.GetNotesPerSecond(mapData.metadata.bpm, difficulty.duration, difficulty.notes) >= NPS.Value : true;
-            bool ratingCondition = rating.HasValue ? mapData.stats.rating >= rating.Value * 100 : true;
+            bool ratingCondition = Rating.HasValue ? mapData.stats.rating >= Rating.Value * 100 : true;
 
             return UsingFilters ? npsCondition && ratingCondition : true;
         }

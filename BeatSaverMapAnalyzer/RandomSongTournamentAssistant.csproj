@@ -81,6 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FilterData.cs" />
     <Compile Include="MapData\MapMetaData\Characteristics\Characteristic.cs" />
     <Compile Include="MapData\MapMetaData\Characteristics\CharacteristicsDifficulty.cs" />
     <Compile Include="UserControls\CustomComboBox.cs">
@@ -107,13 +108,14 @@
     <Compile Include="MapData\MapMetaData\MapDifficulties.cs" />
     <Compile Include="MapData\MapMetaData\MapMetaData.cs" />
     <Compile Include="MapTools.cs" />
+    <Compile Include="UserControls\Filter\FilterHelper.cs" />
     <Compile Include="UserControls\PageControl.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UserControls\RandomKeyFilter.cs">
+    <Compile Include="UserControls\Filter\RandomKeyFilter.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UserControls\RandomKeyFilter.Designer.cs">
+    <Compile Include="UserControls\Filter\RandomKeyFilter.Designer.cs">
       <DependentUpon>RandomKeyFilter.cs</DependentUpon>
     </Compile>
     <Compile Include="MapData\Stats.cs" />
@@ -136,7 +138,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="UserControls\RandomKeyFilter.resx">
+    <EmbeddedResource Include="UserControls\Filter\RandomKeyFilter.resx">
       <DependentUpon>RandomKeyFilter.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />

@@ -9,10 +9,12 @@ namespace RandomSongTournamentAssistant
     public class Latest
     {
         public List<Document> docs = null;
+        public int lastPage;
 
-        public Latest(List<Document> docs)
+        public Latest(List<Document> docs, int lastPage)
         {
             this.docs = docs;
+            this.lastPage = lastPage;
         }
     }
 }

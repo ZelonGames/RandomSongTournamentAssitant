@@ -51,9 +51,10 @@
             this.btnRandomDiff = new System.Windows.Forms.Button();
             this.pictureBox4 = new System.Windows.Forms.PictureBox();
             this.btnFilter = new System.Windows.Forms.Button();
+            this.btnOpenCustomLevelsFolder = new System.Windows.Forms.Button();
+            this.cmbCharacteristics = new RandomSongTournamentAssistant.CustomComboBox();
             this.cmbDifficulty = new RandomSongTournamentAssistant.CustomComboBox();
             this.customComboBox1 = new RandomSongTournamentAssistant.CustomComboBox();
-            this.cmbCharacteristics = new RandomSongTournamentAssistant.CustomComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox4)).BeginInit();
@@ -137,7 +138,7 @@
             this.btnCopyLink.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCopyLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCopyLink.ForeColor = System.Drawing.Color.Black;
-            this.btnCopyLink.Location = new System.Drawing.Point(465, 97);
+            this.btnCopyLink.Location = new System.Drawing.Point(468, 97);
             this.btnCopyLink.Name = "btnCopyLink";
             this.btnCopyLink.Size = new System.Drawing.Size(157, 46);
             this.btnCopyLink.TabIndex = 21;
@@ -364,6 +365,35 @@
             this.btnFilter.UseVisualStyleBackColor = false;
             this.btnFilter.Click += new System.EventHandler(this.btnFilter_Click);
             // 
+            // btnOpenCustomLevelsFolder
+            // 
+            this.btnOpenCustomLevelsFolder.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
+            this.btnOpenCustomLevelsFolder.FlatAppearance.BorderSize = 2;
+            this.btnOpenCustomLevelsFolder.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnOpenCustomLevelsFolder.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnOpenCustomLevelsFolder.ForeColor = System.Drawing.Color.Black;
+            this.btnOpenCustomLevelsFolder.Location = new System.Drawing.Point(17, 598);
+            this.btnOpenCustomLevelsFolder.Name = "btnOpenCustomLevelsFolder";
+            this.btnOpenCustomLevelsFolder.Size = new System.Drawing.Size(608, 46);
+            this.btnOpenCustomLevelsFolder.TabIndex = 37;
+            this.btnOpenCustomLevelsFolder.Text = "Open CustomLevels folder";
+            this.btnOpenCustomLevelsFolder.UseVisualStyleBackColor = false;
+            this.btnOpenCustomLevelsFolder.Click += new System.EventHandler(this.btnOpenCustomLevelsFolder_Click);
+            // 
+            // cmbCharacteristics
+            // 
+            this.cmbCharacteristics.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
+            this.cmbCharacteristics.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
+            this.cmbCharacteristics.ItemHeight = 20;
+            this.cmbCharacteristics.Items.Add("Standard");
+            this.cmbCharacteristics.Items.Add("Single Saber");
+            this.cmbCharacteristics.Items.Add("No Arrows");
+            this.cmbCharacteristics.Location = new System.Drawing.Point(15, 334);
+            this.cmbCharacteristics.MarginBottom = 10;
+            this.cmbCharacteristics.Name = "cmbCharacteristics";
+            this.cmbCharacteristics.Size = new System.Drawing.Size(610, 46);
+            this.cmbCharacteristics.TabIndex = 36;
+            // 
             // cmbDifficulty
             // 
             this.cmbDifficulty.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
@@ -391,27 +421,14 @@
             this.customComboBox1.Size = new System.Drawing.Size(365, 46);
             this.customComboBox1.TabIndex = 30;
             // 
-            // cmbCharacteristics
-            // 
-            this.cmbCharacteristics.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
-            this.cmbCharacteristics.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(12)))), ((int)(((byte)(171)))), ((int)(((byte)(206)))));
-            this.cmbCharacteristics.ItemHeight = 20;
-            this.cmbCharacteristics.Items.Add("Standard");
-            this.cmbCharacteristics.Items.Add("Single Saber");
-            this.cmbCharacteristics.Items.Add("No Arrows");
-            this.cmbCharacteristics.Location = new System.Drawing.Point(15, 334);
-            this.cmbCharacteristics.MarginBottom = 10;
-            this.cmbCharacteristics.Name = "cmbCharacteristics";
-            this.cmbCharacteristics.Size = new System.Drawing.Size(607, 46);
-            this.cmbCharacteristics.TabIndex = 36;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.ClientSize = new System.Drawing.Size(637, 610);
+            this.ClientSize = new System.Drawing.Size(637, 656);
+            this.Controls.Add(this.btnOpenCustomLevelsFolder);
             this.Controls.Add(this.cmbCharacteristics);
             this.Controls.Add(this.btnFilter);
             this.Controls.Add(this.lblClose);
@@ -480,6 +497,7 @@
         private System.Windows.Forms.PictureBox pictureBox4;
         private System.Windows.Forms.Button btnFilter;
         public CustomComboBox cmbCharacteristics;
+        private System.Windows.Forms.Button btnOpenCustomLevelsFolder;
     }
 }
 
