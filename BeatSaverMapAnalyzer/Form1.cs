@@ -16,6 +16,9 @@ using System.Windows.Forms;
 using BeastSaberMapLoader;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Reflection;
+using RandomSongTournamentAssistant.Extensions;
+using BeatSaverSharp;
 
 using RandomSongTournamentAssistant.UserControls.Filter;
 
@@ -25,6 +28,8 @@ namespace RandomSongTournamentAssistant
     {
         #region Fields
 
+        public static BeatSaver beatsaverClient = new BeatSaver(new HttpOptions() { ApplicationName = Assembly.GetExecutingAssembly().GetName().Name, Version = Assembly.GetExecutingAssembly().GetName().Version });
+
         private static readonly HttpClient client = new HttpClient();
 
         private List<string> difficulties = new List<string>();
@@ -32,7 +37,7 @@ namespace RandomSongTournamentAssistant
 
         private RandomKeyFilter randomKeyFilter = null;
 
-        private MapData mapData = null;
+        private Beatmap mapData = null;
 
         private string customLevelsFolderFilename = "beatsaverFolder.txt";
 
@@ -124,54 +129,33 @@ namespace RandomSongTournamentAssistant
             else
             {
                 string beatsaverURL = "https://beatsaver.com/beatmap/" + txtMapID.Text;
-                string bpm = mapData.metadata.bpm.ToString();
+                string bpm = mapData.Metadata.BPM.ToString();
 
                 // Stats
-                string downloads = mapData.stats.downloads.ToString();
-                string plays = mapData.stats.plays.ToString();
-                string downVotes = mapData.stats.downVotes.ToString();
-                string upVotes = mapData.stats.upVotes.ToString();
-                string rating = mapData.stats.rating.ToString();
+                string downloads = mapData.Stats.Downloads.ToString();
+                string plays = mapData.Stats.Plays.ToString();
+                string downVotes = mapData.Stats.DownVotes.ToString();
+                string upVotes = mapData.Stats.UpVotes.ToString();
+                string rating = mapData.Stats.Rating.ToString();
 
-                string selectedDifficulty = cmbDifficulty.Items[cmbDifficulty.SelectedIndex];
+                string selectedDifficultyName = cmbDifficulty.Items[cmbDifficulty.SelectedIndex];
+                selectedDifficultyName = selectedDifficultyName.Substring(0, 1).ToLower() + selectedDifficultyName.Substring(1);
 
 
                 // Difficulty Info
                 string difficultyInfo = "";
 
-                Characteristic selectedCharacteristics = mapData.metadata.characteristics.First();
+                var difficulties = mapData.Metadata.Characteristics.FirstOrDefault().Difficulties;
+                BeatmapCharacteristicDifficulty selectedDifficulty = new BeatmapCharacteristicDifficulty();
 
-                if (selectedCharacteristics == null)
+                if (!difficulties.ContainsKey(selectedDifficultyName))
                 {
                     CustomMessageBox.Show(this, "Could not find info for this difficulty because it doesn't exist!", new Size(customMessageBoxWidthSize, 100));
                     return;
                 }
+                selectedDifficulty = difficulties[selectedDifficultyName].Value;
 
-                switch (selectedDifficulty)
-                {
-                    case "ExpertPlus":
-                        if (selectedCharacteristics.difficulties.expertPlus != null)
-                            difficultyInfo = selectedCharacteristics.difficulties.expertPlus.GetInfoText(mapData.metadata.bpm);
-                        break;
-                    case "Expert":
-                        if (selectedCharacteristics.difficulties.expert != null)
-                            difficultyInfo = selectedCharacteristics.difficulties.expert.GetInfoText(mapData.metadata.bpm);
-                        break;
-                    case "Hard":
-                        if (selectedCharacteristics.difficulties.hard != null)
-                            difficultyInfo = selectedCharacteristics.difficulties.hard.GetInfoText(mapData.metadata.bpm);
-                        break;
-                    case "Normal":
-                        if (selectedCharacteristics.difficulties.normal != null)
-                            difficultyInfo = selectedCharacteristics.difficulties.normal.GetInfoText(mapData.metadata.bpm);
-                        break;
-                    case "Easy":
-                        if (selectedCharacteristics.difficulties.easy != null)
-                            difficultyInfo = selectedCharacteristics.difficulties.easy.GetInfoText(mapData.metadata.bpm);
-                        break;
-                    default:
-                        break;
-                }
+                difficultyInfo = selectedDifficulty.GetInfoText(mapData.Metadata.BPM);
 
                 if (difficultyInfo == "")
                 {
@@ -187,11 +171,10 @@ namespace RandomSongTournamentAssistant
                     "Downvotes: " + downVotes + "\n" +
                     "Upvotes: " + upVotes + "\n" +
                     "Rating: " + rating + "\n\n" +
-                    "================ Difficulty Info (" + selectedDifficulty + ") =================\n" +
+                    "================ Difficulty Info (" + selectedDifficultyName + ") =================\n" +
                     difficultyInfo + "\n" +
-                    "key: " + mapData.key + "\n\n" +
+                    "key: " + mapData.Key + "\n\n" +
                     "Note that NPS isn't 100% accurate as it only looks for the amount of notes in the map and how long the map is instead of looking at where the first note begins and where the last note ends.";
-                ;
 
                 Clipboard.SetData(DataFormats.Text, mapInfo);
                 CustomMessageBox.Show(this, "\"" + mapInfo + "\"" + "\n\nWas added to clipboard", new Size(Size.Width - 50, 400));
@@ -229,10 +212,8 @@ namespace RandomSongTournamentAssistant
 
             string randomKey = null;
 
-            var responseString = await client.GetStringAsync("https://beatsaver.com/api/maps/latest/0");
-
-            var latestMaps = JsonConvert.DeserializeObject<Latest>(responseString);
-            string latestKey = latestMaps.docs[0].key;
+            var latestMaps = await beatsaverClient.Latest();
+            string latestKey = latestMaps.Docs[0].Key;
 
             int keyAsDecimal = int.Parse(latestKey, System.Globalization.NumberStyles.HexNumber);
 
@@ -277,7 +258,7 @@ namespace RandomSongTournamentAssistant
             }
         }
 
-        private void btnRandomDiff_Click(object sender, EventArgs e)
+        private async void btnRandomDiff_Click(object sender, EventArgs e)
         {
             if (difficulties.Count == 0)
             {
@@ -339,8 +320,7 @@ namespace RandomSongTournamentAssistant
 
             cmbDifficulty.SetSelectedIndex(cmbDifficulty.Items.IndexOf(difficulties[index]));
 
-            if (prevIndex == cmbDifficulty.SelectedIndex)
-                CustomMessageBox.Show(this, "The random difficulty stays the same", new Size(customMessageBoxWidthSize, 100));
+            CustomMessageBox.Show(this, "The new random difficulty is " + cmbDifficulty.Items[cmbDifficulty.SelectedIndex], new Size(customMessageBoxWidthSize, 100));
         }
 
         private async void btnGetDifficulties_Click(object sender, EventArgs e)
@@ -358,7 +338,7 @@ namespace RandomSongTournamentAssistant
 
             SwitchToLoadingScreen("Downloading map...");
 
-            await Task.Run(() => { InstallMap(txtMapID.Text); });
+            await InstallMap();
 
             AnalyzeMap();
 
@@ -377,23 +357,7 @@ namespace RandomSongTournamentAssistant
             {
                 SwitchToLoadingScreen("Installing map...");
             }
-
-            await Task.Run(() =>
-            {
-                DownloadMap(txtMapID.Text, txtBeatsaverFolder.Text);
-
-                if (File.Exists(txtBeatsaverFolder.Text + "/" + txtMapID.Text + ".zip"))
-                    UnzipFile(txtBeatsaverFolder.Text + "/" + txtMapID.Text);
-
-                if (!File.Exists(customLevelsFolderFilename))
-                    File.Create(customLevelsFolderFilename).Close();
-
-                using (var wr = new StreamWriter(customLevelsFolderFilename, false))
-                {
-                    wr.WriteLine(txtBeatsaverFolder.Text);
-                }
-            });
-
+            await MapInstaller.InstallMap(mapData, txtBeatsaverFolder.Text);
 
             HideLoadingScreen();
             //DownloadMap(txtMapID.Text, txtBeatsaverFolder.Text);
@@ -478,25 +442,10 @@ namespace RandomSongTournamentAssistant
         {
             try
             {
-                var responseString = await client.GetStringAsync("https://beatsaver.com/api/maps/detail/" + randomKey);
-
-                if (!File.Exists("mapData.json"))
-                {
-                    File.Create("mapData.json").Close();
-                }
-
-                if (File.Exists("mapData.json"))
-                {
-                    using (var wr = new StreamWriter("mapData.json"))
-                    {
-                        wr.WriteLine(responseString);
-                    }
-                }
-
-                mapData = JsonConvert.DeserializeObject<MapData>(responseString);
+                mapData = await beatsaverClient.Key(randomKey);
 
                 #region NPS Filter
-                Difficulty highestDifficulty = mapData.metadata.characteristics[0].difficulties.GetHighestDifficulty();
+                BeatmapCharacteristicDifficulty highestDifficulty = mapData.Metadata.Characteristics[0].Difficulties.GetHighestDifficulty();
                 if (randomKeyFilter != null && !randomKeyFilter.MatchingFilters(highestDifficulty, mapData))
                 {
                     mapData = null;
@@ -504,7 +453,7 @@ namespace RandomSongTournamentAssistant
                 }
                 #endregion
 
-                difficulties = mapData.metadata.difficulties.GetDifficulties();
+                difficulties = mapData.GetDifficulties();
                 this.lblDifficulties.Text = "";
                 foreach (var difficulty in difficulties)
                 {
@@ -513,7 +462,7 @@ namespace RandomSongTournamentAssistant
 
                 txtMapID.Text = randomKey;
 
-                txtTitle.Text = mapData.metadata.songName + " - " + mapData.metadata.songSubName + "\n" + mapData.metadata.levelAuthorName;
+                txtTitle.Text = mapData.Metadata.SongName + " - " + mapData.Metadata.SongSubName + "\n" + mapData.Metadata.LevelAuthorName;
             }
             catch (Exception ex)
             {
@@ -523,30 +472,18 @@ namespace RandomSongTournamentAssistant
             }
         }
 
-        private void InstallMap(string id)
+        private async Task InstallMap()
         {
-            if (id.Length == 0)
-                return;
-
-
             if (!testJsonMode)
             {
                 if (Directory.Exists("analyzedMap"))
                     DeleteAnalyzedDirectory();
 
-                try
-                {
-                    DownloadMap(id, "", "analyzedMap");
-                }
-                catch (WebException we)
-                {
-                    MessageBox.Show(we.ToString());
-                    return;
-                }
+                Directory.CreateDirectory("analyzedMap");
 
                 try
                 {
-                    ZipFile.ExtractToDirectory("analyzedMap.zip", "analyzedMap");
+                    await MapInstaller.InstallMap(mapData, "analyzedMap");
                 }
                 catch (Exception ex)
                 {
@@ -583,6 +520,7 @@ namespace RandomSongTournamentAssistant
                             difficultyFileName = difficulty._beatmapFilename;
                             if (difficulty.customData._requirements.Any(x => x == "Mapping Extensions"))
                                 requires_mapping_extensions = true;
+
                             break;
                         }
                     }
@@ -668,24 +606,6 @@ namespace RandomSongTournamentAssistant
             BackgroundImage = null;
         }
 
-        private void DownloadMap(string key, string directory, string fileName = null)
-        {
-            if (directory.Length > 0)
-                directory += "/";
-
-            fileName = fileName == null ? key : fileName;
-
-            try
-            {
-                WebClient wc = new WebClient();
-                wc.DownloadFile("https://beatsaver.com/api/download/key/" + key, directory + fileName + ".zip");
-            }
-            catch (WebException we)
-            {
-                MessageBox.Show(we.ToString());
-            }
-        }
-
         private void UnzipFile(string fileName)
         {
             ZipFile.ExtractToDirectory(fileName + ".zip", fileName);
@@ -695,7 +615,6 @@ namespace RandomSongTournamentAssistant
         private void DeleteAnalyzedDirectory()
         {
             Directory.Delete("analyzedMap", true);
-            File.Delete("analyzedMap.zip");
         }
 
         private int getAmountOfTooWideWalls(List<Obstacle> walls, int badWallWidth)

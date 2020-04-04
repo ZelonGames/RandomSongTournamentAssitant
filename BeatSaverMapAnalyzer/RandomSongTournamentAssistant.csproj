@@ -55,6 +55,9 @@
     <Reference Include="BeastSaberMapLoader">
       <HintPath>..\..\BeastSaberMapLoader\BeastSaberMapLoader\bin\Debug\BeastSaberMapLoader.dll</HintPath>
     </Reference>
+    <Reference Include="BeatSaverSharp">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Libs\BeatSaverSharp.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -81,9 +84,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\MapDataExtensions.cs" />
     <Compile Include="FilterData.cs" />
     <Compile Include="MapData\MapMetaData\Characteristics\Characteristic.cs" />
     <Compile Include="MapData\MapMetaData\Characteristics\CharacteristicsDifficulty.cs" />
+    <Compile Include="MapInstaller.cs" />
     <Compile Include="UserControls\CustomComboBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
