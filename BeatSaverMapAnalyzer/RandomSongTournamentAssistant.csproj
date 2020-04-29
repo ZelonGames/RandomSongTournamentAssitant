@@ -86,9 +86,13 @@
   <ItemGroup>
     <Compile Include="Extensions\MapDataExtensions.cs" />
     <Compile Include="FilterData.cs" />
+    <Compile Include="LoadingScreenHelper.cs" />
+    <Compile Include="MapAnalyzer.cs" />
+    <Compile Include="MapDataHelper.cs" />
     <Compile Include="MapData\MapMetaData\Characteristics\Characteristic.cs" />
     <Compile Include="MapData\MapMetaData\Characteristics\CharacteristicsDifficulty.cs" />
     <Compile Include="MapInstaller.cs" />
+    <Compile Include="RandomKeyGenerator.cs" />
     <Compile Include="UserControls\CustomComboBox.cs">
       <SubType>UserControl</SubType>
     </Compile>

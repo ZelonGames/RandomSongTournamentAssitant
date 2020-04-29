@@ -29,19 +29,19 @@ namespace RandomSongTournamentAssistant
         #region Fields
 
         public static BeatSaver beatsaverClient = new BeatSaver(new HttpOptions() { ApplicationName = Assembly.GetExecutingAssembly().GetName().Name, Version = Assembly.GetExecutingAssembly().GetName().Version });
+        public static Random rnd = new Random();
 
-        private static readonly HttpClient client = new HttpClient();
+        public static readonly HttpClient client = new HttpClient();
+
+        private Beatmap mapData;
 
         private List<string> difficulties = new List<string>();
-        private Random rnd = new Random();
 
         private RandomKeyFilter randomKeyFilter = null;
 
-        private Beatmap mapData = null;
-
         private string customLevelsFolderFilename = "beatsaverFolder.txt";
 
-        private int customMessageBoxWidthSize = 300;
+        public const int customMessageBoxWidthSize = 300;
 
         private bool testJsonMode = false;
 
@@ -199,66 +199,25 @@ namespace RandomSongTournamentAssistant
             txtMapID.Text = "";
             lblDifficulties.Text = "";
 
-            int tries = 0;
-            int maxTries = 10;
+            LoadingScreenHelper.SwitchToLoadingScreen(this, "Searching for a map...");
 
-            if (randomKeyFilter != null && randomKeyFilter.UsingFilters)
-                maxTries = 50;
+            mapData = await RandomKeyGenerator.GenerateRandomMap(this, randomKeyFilter);
+            
 
-            if (maxTries > 10)
-                SwitchToLoadingScreen("Searching for a map...");
-
-            mapData = null;
-
-            string randomKey = null;
-
-            var latestMaps = await beatsaverClient.Latest();
-            string latestKey = latestMaps.Docs[0].Key;
-
-            int keyAsDecimal = int.Parse(latestKey, System.Globalization.NumberStyles.HexNumber);
-
-            if (randomKey == null)
-            {
-                if (randomKeyFilter != null && randomKeyFilter.Rating.HasValue)
-                    await FilterHelper.SetFilterPageNumbers(client, (int)(randomKeyFilter.Rating.Value * 100), "minRatingAPIPage");
-
-                while (true)
-                {
-                    if (randomKeyFilter != null && randomKeyFilter.Rating.HasValue)
-                    {
-                        await FilterHelper.SetRandomKey(client, rnd);
-                        randomKey = FilterHelper.RandomKey;
-                    }
-                    else
-                    {
-                        int randomNumber = rnd.Next(0, keyAsDecimal + 1);
-                        randomKey = randomNumber.ToString("x");
-                    }
-
-                    if (mapData == null)
-                        await UpdateMapData(randomKey);
-                    if (mapData != null)
-                        break;
-
-                    if (tries == maxTries)
-                        break;
-
-                    tries++;
-                }
-            }
-
-            if (maxTries > 10)
-                HideLoadingScreen();
-
-            if (tries == maxTries)
+            if (mapData == null)
             {
                 CustomMessageBox.Show(this, "Could not find a valid key. Try again!", new Size(customMessageBoxWidthSize, 100));
                 mapData = null;
                 txtMapID.Text = "";
             }
+            else
+            {
+                UpdateMapDataText();
+                LoadingScreenHelper.HideLoadingScreen(this);
+            }
         }
 
-        private async void btnRandomDiff_Click(object sender, EventArgs e)
+        private void btnRandomDiff_Click(object sender, EventArgs e)
         {
             if (difficulties.Count == 0)
             {
@@ -325,7 +284,8 @@ namespace RandomSongTournamentAssistant
 
         private async void btnGetDifficulties_Click(object sender, EventArgs e)
         {
-            await UpdateMapData(txtMapID.Text, true);
+            mapData = await MapDataHelper.GetMapData(this, randomKeyFilter, txtMapID.Text, true);
+            UpdateMapDataText();
         }
 
         private async void btnAnalyzeMap_Click(object sender, EventArgs e)
@@ -336,18 +296,32 @@ namespace RandomSongTournamentAssistant
                 return;
             }
 
-            SwitchToLoadingScreen("Downloading map...");
+            LoadingScreenHelper.SwitchToLoadingScreen(this, "Downloading map...");
 
-            await InstallMap();
+            if (!testJsonMode)
+            {
+                if (Directory.Exists("analyzedMap"))
+                    Directory.Delete("analyzedMap", true);
 
-            AnalyzeMap();
+                Directory.CreateDirectory("analyzedMap");
 
-            HideLoadingScreen();
+                try
+                {
+                    await MapInstaller.InstallMap(mapData, "analyzedMap");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString());
+                    return;
+                }
+            }
+
+            MapAnalyzer.AnalyzeMap(this, cmbCharacteristics, cmbDifficulty, testJsonMode);
+            LoadingScreenHelper.HideLoadingScreen(this);
         }
 
         private async void btnInstallMap_Click(object sender, EventArgs e)
         {
-
             if (!CanDownloadMap(txtMapID.Text, txtBeatsaverFolder.Text))
             {
                 CustomMessageBox.Show(this, "You have already downloaded this map!", new Size(customMessageBoxWidthSize, 100));
@@ -355,12 +329,11 @@ namespace RandomSongTournamentAssistant
             }
             else
             {
-                SwitchToLoadingScreen("Installing map...");
+                LoadingScreenHelper.SwitchToLoadingScreen(this, "Installing map...");
             }
             await MapInstaller.InstallMap(mapData, txtBeatsaverFolder.Text);
 
-            HideLoadingScreen();
-            //DownloadMap(txtMapID.Text, txtBeatsaverFolder.Text);
+            LoadingScreenHelper.HideLoadingScreen(this);
         }
 
         private void btnOpenCustomLevelsFolder_Click(object sender, EventArgs e)
@@ -433,328 +406,21 @@ namespace RandomSongTournamentAssistant
 
         #region Methods
 
+        private void UpdateMapDataText()
+        {
+            difficulties = mapData.GetDifficulties();
+            lblDifficulties.Text = "";
+            foreach (var difficulty in difficulties)
+                this.lblDifficulties.Text += difficulty + " ";
+
+            txtMapID.Text = mapData.Key;
+
+            txtTitle.Text = mapData.Metadata.SongName + " - " + mapData.Metadata.SongSubName + "\n" + mapData.Metadata.LevelAuthorName;
+        }
+
         public static Size MeasureText(string text, Font font)
         {
             return TextRenderer.MeasureText(text, font);
-        }
-
-        private async Task UpdateMapData(string randomKey, bool showError = false)
-        {
-            try
-            {
-                mapData = await beatsaverClient.Key(randomKey);
-
-                #region NPS Filter
-                BeatmapCharacteristicDifficulty highestDifficulty = mapData.Metadata.Characteristics[0].Difficulties.GetHighestDifficulty();
-                if (randomKeyFilter != null && !randomKeyFilter.MatchingFilters(highestDifficulty, mapData))
-                {
-                    mapData = null;
-                    return;
-                }
-                #endregion
-
-                difficulties = mapData.GetDifficulties();
-                this.lblDifficulties.Text = "";
-                foreach (var difficulty in difficulties)
-                {
-                    this.lblDifficulties.Text += difficulty + " ";
-                }
-
-                txtMapID.Text = randomKey;
-
-                txtTitle.Text = mapData.Metadata.SongName + " - " + mapData.Metadata.SongSubName + "\n" + mapData.Metadata.LevelAuthorName;
-            }
-            catch (Exception ex)
-            {
-                if (showError)
-                    CustomMessageBox.Show(this, "There is no map with this key!", new Size(customMessageBoxWidthSize, 100));
-                mapData = null;
-            }
-        }
-
-        private async Task InstallMap()
-        {
-            if (!testJsonMode)
-            {
-                if (Directory.Exists("analyzedMap"))
-                    DeleteAnalyzedDirectory();
-
-                Directory.CreateDirectory("analyzedMap");
-
-                try
-                {
-                    await MapInstaller.InstallMap(mapData, "analyzedMap");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.ToString());
-                    return;
-                }
-            }
-        }
-
-        private void AnalyzeMap()
-        {
-            int wideWalls = 0;
-            int facenotes = 0;
-
-            string fileExtension = testJsonMode ? "json" : "dat";
-
-            MapInfo mapInfo = null;
-            string difficultyFileName = null;
-            bool requires_mapping_extensions = false;
-
-            try
-            {
-                mapInfo = MapLoader.LoadInfo("analyzedMap/info." + fileExtension);
-
-                foreach (var difficultySet in mapInfo._difficultyBeatmapSets)
-                {
-                    if (cmbCharacteristics.SelectedItemText.ToLower() != difficultySet._beatmapCharacteristicName.ToLower())
-                        continue;
-
-                    foreach (var difficulty in difficultySet._difficultyBeatmaps)
-                    {
-                        if (difficulty._difficulty.ToLower() == cmbDifficulty.SelectedItemText.ToLower())
-                        {
-                            difficultyFileName = difficulty._beatmapFilename;
-                            if (difficulty.customData._requirements.Any(x => x == "Mapping Extensions"))
-                                requires_mapping_extensions = true;
-
-                            break;
-                        }
-                    }
-                    if (difficultyFileName != null)
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-                return;
-            }
-
-            if (difficultyFileName == null)
-            {
-                CustomMessageBox.Show(this, "The difficulty doesn't exist!", new Size(customMessageBoxWidthSize, 100));
-                return;
-            }
-
-            Map map = MapLoader.LoadDifficulty("analyzedMap/" + difficultyFileName);
-
-            foreach (var note in map._notes)
-            {
-                if ((note._lineIndex == 1 || note._lineIndex == 2) && note._lineLayer == 1)
-                    facenotes++;
-            }
-
-            int wideWallsPercent = (int)((float)wideWalls / map._obstacles.Count * 100);
-
-            if (map != null)
-                wideWalls = getAmountOfTooWideWalls(map._obstacles, 3);
-
-            string resultTest = wideWalls + ", three wide walls";
-            if (wideWalls == 0)
-                resultTest = "No three wide walls in this map :)";
-
-            if (requires_mapping_extensions)
-                resultTest += "\nWARNING: This map does require mapping extensions!";
-            CustomMessageBox.Show(this, resultTest, new Size(customMessageBoxWidthSize, 100));
-
-            if (!testJsonMode)
-            {
-                if (Directory.Exists("analyzedMap"))
-                    DeleteAnalyzedDirectory();
-            }
-        }
-
-        private void SwitchToLoadingScreen(string loadingScreenText)
-        {
-            foreach (var control in Controls)
-            {
-                ((Control)control).Visible = false;
-            }
-            BackgroundImage = Properties.Resources.saber_o_sponsor;
-
-            var loadingText = new Label();
-            loadingText.Name = "LoadingScreenText";
-            loadingText.Text = loadingScreenText;
-            loadingText.ForeColor = Color.White;
-            loadingText.BackColor = Color.Black;
-
-            loadingText.AutoSize = false;
-
-            loadingText.Font = new Font(loadingText.Font.FontFamily, 20);
-            loadingText.Size = MeasureText(loadingText.Text, loadingText.Font);
-
-            loadingText.Location = new Point(Size.Width / 2 - loadingText.Size.Width / 2, Size.Height / 2 - loadingText.Size.Height / 2);
-
-            Controls.Add(loadingText);
-            loadingText.BringToFront();
-        }
-
-        private void HideLoadingScreen()
-        {
-            foreach (var control in Controls)
-            {
-                if (!(control is PageControl))
-                    ((Control)control).Visible = true;
-            }
-
-            Controls.Remove(Controls["LoadingScreenText"]);
-
-            BackgroundImage = null;
-        }
-
-        private void UnzipFile(string fileName)
-        {
-            ZipFile.ExtractToDirectory(fileName + ".zip", fileName);
-            File.Delete(fileName + ".zip");
-        }
-
-        private void DeleteAnalyzedDirectory()
-        {
-            Directory.Delete("analyzedMap", true);
-        }
-
-        private int getAmountOfTooWideWalls(List<Obstacle> walls, int badWallWidth)
-        {
-            if (walls.Count == 0)
-                return 0;
-
-            double getWidthOfGroup(List<Obstacle> group)
-            {
-                double minLineIndex = group.First()._type == 0 ? group.First()._lineIndex : 0;
-                double maxLineIndex = group.First()._type == 0 ? group.First()._lineIndex + group.First()._width : 0;
-
-                for (int w = 1; w < group.Count; w++)
-                {
-                    Obstacle wall = group[w];
-
-                    if (wall._type != 0)
-                        continue;
-
-                    if (wall._lineIndex < minLineIndex)
-                        minLineIndex = wall._lineIndex;
-
-                    if (wall._lineIndex + wall._width > maxLineIndex)
-                        maxLineIndex = wall._lineIndex + wall._width;
-                }
-
-
-                return maxLineIndex - minLineIndex;
-            }
-
-            walls = walls.OrderBy(x => x._time).ToList();
-
-            int wideWalls = 0;
-
-            var listOfWideWalls = new List<List<Obstacle>>();
-            var groupedWalls = new List<List<Obstacle>>();
-            groupedWalls.Add(new List<Obstacle>());
-            groupedWalls.Last().Add(walls.First());
-
-            var savedGroupedWalls = new List<List<Obstacle>>();
-            savedGroupedWalls.Add(groupedWalls.Last());
-
-            List<Obstacle> lastGroupedWall = null;
-
-            for (int i = 1; i < walls.Count; i++)
-            {
-                Obstacle wall = walls[i];
-
-                if (wall._type != 0)
-                    continue;
-
-                foreach (var savedGroupedWall in savedGroupedWalls)
-                {
-                    if (wall._time > savedGroupedWall.Max(x => x._time + x._duration))
-                    {
-                        savedGroupedWalls.Remove(savedGroupedWall);
-                        break;
-                    }
-                }
-
-                bool addedWall = false;
-
-                foreach (var savedGroupedWall in savedGroupedWalls)
-                {
-                    foreach (var individualWall in savedGroupedWall)
-                    {
-
-                        if (IsWallTouchingAnotherWall(wall, individualWall))
-                        {
-                            savedGroupedWall.Add(wall);
-                            addedWall = true;
-                            break;
-                        }
-                    }
-
-                    if (addedWall)
-                        break;
-                }
-
-                if (!addedWall)
-                {
-                    lastGroupedWall = groupedWalls.Last();
-
-                    for (int g = groupedWalls.Count - 2; g > 0; g--)
-                    {
-                        List<Obstacle> currentGroupedWall = groupedWalls[g];
-
-                        if (lastGroupedWall.Max(x => x._time + x._duration) < currentGroupedWall.Max(x => x._time + x._duration))
-                            lastGroupedWall = currentGroupedWall;
-                        else
-                            break;
-                    }
-
-                    double width = getWidthOfGroup(lastGroupedWall);
-
-                    if (width == 2)
-                    {
-                        if (lastGroupedWall.Min(x => x._lineIndex) == 1)
-                        {
-                            wideWalls++;
-                            listOfWideWalls.Add(lastGroupedWall);
-                        }
-                    }
-                    else if (width >= badWallWidth)
-                    {
-                        wideWalls++;
-                        listOfWideWalls.Add(lastGroupedWall);
-                    }
-
-                    groupedWalls.Add(new List<Obstacle>());
-                    groupedWalls.Last().Add(wall);
-                    savedGroupedWalls.Add(groupedWalls.Last());
-                }
-            }
-
-
-            lastGroupedWall = groupedWalls.Last();
-            double width2 = getWidthOfGroup(lastGroupedWall);
-
-            if (width2 == 2)
-            {
-                if (lastGroupedWall.Min(x => x._lineIndex) == 1)
-                {
-                    wideWalls++;
-                    listOfWideWalls.Add(lastGroupedWall);
-                }
-            }
-            if (width2 >= badWallWidth)
-            {
-                wideWalls++;
-                listOfWideWalls.Add(lastGroupedWall);
-            }
-
-            return wideWalls;
-        }
-
-        public bool IsWallTouchingAnotherWall(Obstacle wall, Obstacle otherWall)
-        {
-            return (wall._time >= otherWall._time && wall._time <= otherWall._time + otherWall._duration) &&
-                ((wall._lineIndex >= otherWall._lineIndex || wall._lineIndex + wall._width >= otherWall._lineIndex) && wall._lineIndex <= otherWall._lineIndex + otherWall._width);
         }
 
         private bool CanDownloadMap(string key, string directory, string fileName = null)

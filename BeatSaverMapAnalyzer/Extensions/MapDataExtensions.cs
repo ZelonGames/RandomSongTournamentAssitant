@@ -52,6 +52,7 @@ namespace RandomSongTournamentAssistant.Extensions
             return
                 "Length: " + lengthInfo + "\n" +
                 "Note jump speed: " + beatmapCharacteristicDifficulty.NoteJumpSpeed + "\n" +
+                "Note jump speed offset: " + beatmapCharacteristicDifficulty.NoteJumpSpeedOffset + "\n" +
                 "Notes per second: " + notesPerSecond + "\n" +
                 "Bombs: " + beatmapCharacteristicDifficulty.Bombs+ "\n" +
                 "Notes: " + beatmapCharacteristicDifficulty.Notes + "\n" +

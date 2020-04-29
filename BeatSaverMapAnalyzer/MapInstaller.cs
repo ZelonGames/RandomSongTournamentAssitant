@@ -12,6 +12,7 @@ namespace RandomSongTournamentAssistant
 {
     public static class MapInstaller
     {
+
         public static async Task<string> InstallMap(Beatmap mapData, string mapPath)
         {
             byte[] zipData = await DownloadMap(mapData);
@@ -73,11 +74,6 @@ namespace RandomSongTournamentAssistant
                 zipStream.Close();
                 return false;
             }
-        }
-
-        private static void CreateAnalyzedMapDirectory()
-        {
-
         }
     }
 }
