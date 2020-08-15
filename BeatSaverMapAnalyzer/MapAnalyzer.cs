@@ -38,7 +38,7 @@ namespace RandomSongTournamentAssistant
                         if (difficulty._difficulty.ToLower() == cmbDifficulty.SelectedItemText.ToLower())
                         {
                             difficultyFileName = difficulty._beatmapFilename;
-                            requires_extensions = difficulty.customData._requirements.Length > 0;
+                            requires_extensions = difficulty.customData != null && difficulty.customData._requirements != null ? difficulty.customData._requirements.Length > 0 : false;
                             break;
                         }
                     }
