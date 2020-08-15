@@ -22,7 +22,7 @@ namespace RandomSongTournamentAssistant
 
             MapInfo mapInfo = null;
             string difficultyFileName = null;
-            bool requires_mapping_extensions = false;
+            bool requires_extensions = false;
 
             try
             {
@@ -38,9 +38,7 @@ namespace RandomSongTournamentAssistant
                         if (difficulty._difficulty.ToLower() == cmbDifficulty.SelectedItemText.ToLower())
                         {
                             difficultyFileName = difficulty._beatmapFilename;
-                            if (difficulty.customData._requirements.Any(x => x == "Mapping Extensions"))
-                                requires_mapping_extensions = true;
-
+                            requires_extensions = difficulty.customData._requirements.Length > 0;
                             break;
                         }
                     }
@@ -77,8 +75,8 @@ namespace RandomSongTournamentAssistant
             if (wideWalls == 0)
                 resultTest = "No three wide walls in this map :)";
 
-            if (requires_mapping_extensions)
-                resultTest += "\nWARNING: This map does require mapping extensions!";
+            if (requires_extensions)
+                resultTest += "\nWARNING: This map requires special extensions such as: Chroma, Mapping Extensions, Noodle Extensions or Feet Saber or any other weird thing that you may not want in a tournament!";
             CustomMessageBox.Show(form, resultTest, new Size(Form1.customMessageBoxWidthSize, 100));
 
             if (!testJsonMode)

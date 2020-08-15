@@ -202,7 +202,7 @@ namespace RandomSongTournamentAssistant
             LoadingScreenHelper.SwitchToLoadingScreen(this, "Searching for a map...");
 
             mapData = await RandomKeyGenerator.GenerateRandomMap(this, randomKeyFilter);
-            
+
 
             if (mapData == null)
             {
@@ -285,7 +285,8 @@ namespace RandomSongTournamentAssistant
         private async void btnGetDifficulties_Click(object sender, EventArgs e)
         {
             mapData = await MapDataHelper.GetMapData(this, randomKeyFilter, txtMapID.Text, true);
-            UpdateMapDataText();
+            if (mapData != null)
+                UpdateMapDataText();
         }
 
         private async void btnAnalyzeMap_Click(object sender, EventArgs e)

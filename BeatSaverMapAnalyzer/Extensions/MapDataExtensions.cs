@@ -41,8 +41,8 @@ namespace RandomSongTournamentAssistant.Extensions
 
         public static string GetInfoText(this BeatmapCharacteristicDifficulty beatmapCharacteristicDifficulty, double bpm)
         {
-            int minutes = beatmapCharacteristicDifficulty.Length / 60;
-            int seconds = beatmapCharacteristicDifficulty.Length - minutes * 60;
+            long minutes = beatmapCharacteristicDifficulty.Length / 60;
+            long seconds = beatmapCharacteristicDifficulty.Length - minutes * 60;
             double notesPerSecond = MapTools.GetNotesPerSecond(bpm, beatmapCharacteristicDifficulty.Duration, beatmapCharacteristicDifficulty.Notes);
             string lengthInfo = minutes + " minutes " + seconds + " seconds ";
 
