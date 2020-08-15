@@ -77,7 +77,7 @@ namespace RandomSongTournamentAssistant
 
             if (requires_extensions)
                 resultTest += "\nWARNING: This map requires special extensions such as: Chroma, Mapping Extensions, Noodle Extensions or Feet Saber or any other weird thing that you may not want in a tournament!";
-            CustomMessageBox.Show(form, resultTest, new Size(Form1.customMessageBoxWidthSize, 100));
+            CustomMessageBox.Show(form, resultTest, new Size(Form1.customMessageBoxWidthSize, 150));
 
             if (!testJsonMode)
             {
