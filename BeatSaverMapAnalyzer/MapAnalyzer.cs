@@ -22,6 +22,7 @@ namespace RandomSongTournamentAssistant
 
             MapInfo mapInfo = null;
             string difficultyFileName = null;
+            string requirementsList = null;
             bool requires_extensions = false;
 
             try
@@ -39,6 +40,13 @@ namespace RandomSongTournamentAssistant
                         {
                             difficultyFileName = difficulty._beatmapFilename;
                             requires_extensions = difficulty.customData != null && difficulty.customData._requirements != null ? difficulty.customData._requirements.Length > 0 : false;
+                            if (requires_extensions)
+                            {
+                                foreach (var requirement in difficulty.customData._requirements)
+                                {
+                                    requirementsList += requirement + "\n";
+                                }
+                            }
                             break;
                         }
                     }
@@ -54,7 +62,7 @@ namespace RandomSongTournamentAssistant
 
             if (difficultyFileName == null)
             {
-                CustomMessageBox.Show(form, "The difficulty doesn't exist!", new Size(Form1.customMessageBoxWidthSize, 100));
+                CustomMessageBox.Show(form, "The difficulty doesn't exist!", new Size(Form1.customMessageBoxWidthSize, 200));
                 return;
             }
 
@@ -76,8 +84,9 @@ namespace RandomSongTournamentAssistant
                 resultTest = "No three wide walls in this map :)";
 
             if (requires_extensions)
-                resultTest += "\nWARNING: This map requires special extensions such as: Chroma, Mapping Extensions, Noodle Extensions or Feet Saber or any other weird thing that you may not want in a tournament!";
-            CustomMessageBox.Show(form, resultTest, new Size(Form1.customMessageBoxWidthSize, 150));
+                resultTest += "\n\nRequirements:\n" + requirementsList + "\n";
+
+            CustomMessageBox.Show(form, resultTest, new Size(Form1.customMessageBoxWidthSize, 200));
 
             if (!testJsonMode)
             {
